@@ -43,7 +43,7 @@ void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_t
     for (uint8_t i=0; i<NUM_ACTUATORS; i++) {
         SRV_Channels::set_angle(SRV_Channels::get_motor_function(i), AP_MOTORS_COAX_SERVO_INPUT_RANGE);
     }
-    
+
     // record successful initialisation if what we setup was the desired frame_class
     _flags.initialised_ok = (frame_class == MOTOR_FRAME_COAX);
 }
@@ -71,9 +71,10 @@ void AP_MotorsCoax::output_to_motors()
     switch (_spool_mode) {
         case SHUT_DOWN:
             // sends minimum values out to the motors
-            rc_write_angle(AP_MOTORS_MOT_1, _roll_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_2, _pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_3, -_roll_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+
+            rc_write_angle(AP_MOTORS_MOT_1, ((-_roll_radio_passthrough*0.866f)-(_pitch_radio_passthrough*0.4f)) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            rc_write_angle(AP_MOTORS_MOT_2, (_pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE));
+            rc_write_angle(AP_MOTORS_MOT_3, ((_roll_radio_passthrough*0.866f)-(_pitch_radio_passthrough*0.4f)) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
             rc_write_angle(AP_MOTORS_MOT_4, -_pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
             rc_write(AP_MOTORS_MOT_5, get_pwm_output_min());
             rc_write(AP_MOTORS_MOT_6, get_pwm_output_min());
@@ -192,7 +193,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
     _thrust_yt_cw = thrust_out - 0.5f * yaw_thrust;
 
     // limit thrust out for calculation of actuator gains
-    float thrust_out_actuator = constrain_float(MAX(_throttle_hover*0.5f,thrust_out), 0.5f, 1.0f);
+    // float thrust_out_actuator = constrain_float(MAX(_throttle_hover*0.5f,thrust_out), 0.5f, 1.0f);
 
     if (is_zero(thrust_out)) {
         limit.roll_pitch = true;
@@ -201,8 +202,37 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // static thrust is proportional to the airflow velocity squared
     // therefore the torque of the roll and pitch actuators should be approximately proportional to
     // the angle of attack multiplied by the static thrust.
-    _actuator_out[0] = roll_thrust/thrust_out_actuator;
-    _actuator_out[1] = pitch_thrust/thrust_out_actuator;
+
+    // _actuator_out[0] = roll_thrust/thrust_out_actuator;
+    // _actuator_out[1] = pitch_thrust/thrust_out_actuator;
+    //
+    // _actuator_out[0] = roll_thrust;
+    // _actuator_out[1] = pitch_thrust;
+    // if (fabsf(_actuator_out[0]) > 1.0f) {
+    //     limit.roll_pitch = true;
+    //     _actuator_out[0] = constrain_float(_actuator_out[0], -*0.4f1.0f, 1.0f);
+    // }
+
+    // if (fabsf(_actuator_out[1]) > 1.0f) {
+    //     limit.roll_pitch = true;
+    //     _actuator_out[1] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
+    // }
+    // _actuator_out[2] = -_actuator_out[0];
+    // _actuator_out[3] = -_actuator_out[1];
+
+    _actuator_out[1] = pitch_thrust;  //servo 2  elevator
+
+    _actuator_out[0] = ((-roll_thrust*0.866f)-(pitch_thrust*0.4f));   //servo 1 aillron
+
+    _actuator_out[2] = ((roll_thrust*0.866f)-(pitch_thrust*0.4f));   //servo 3 aillron
+
+    _actuator_out[3] = -_actuator_out[1];
+
+
+    // rc_write_angle(AP_MOTORS_MOT_1, ((-_roll_radio_passthrough*0.866f)+(_pitch_radio_passthrough*0.4f)) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+    // rc_write_angle(AP_MOTORS_MOT_2, (-_pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE));
+    // rc_write_angle(AP_MOTORS_MOT_3, ((_roll_radio_passthrough*0.866f)+(_pitch_radio_passthrough*0.4f)) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+
     if (fabsf(_actuator_out[0]) > 1.0f) {
         limit.roll_pitch = true;
         _actuator_out[0] = constrain_float(_actuator_out[0], -1.0f, 1.0f);
@@ -211,8 +241,16 @@ void AP_MotorsCoax::output_armed_stabilizing()
         limit.roll_pitch = true;
         _actuator_out[1] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
     }
-    _actuator_out[2] = -_actuator_out[0];
-    _actuator_out[3] = -_actuator_out[1];
+
+    if (fabsf(_actuator_out[2]) > 1.0f) {
+        limit.roll_pitch = true;
+        _actuator_out[2] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
+    }
+    if (fabsf(_actuator_out[3]) > 1.0f) {
+          limit.roll_pitch = true;
+        _actuator_out[3] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
+    }
+
 }
 
 // output_test - spin a motor at the pwm value specified
