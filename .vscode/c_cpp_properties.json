@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/pc/catkin_ws/devel/include",
+                "/opt/ros/melodic/include",
+                "/home/pc/catkin_ws/src/avoidance/avoidance/include",
+                "/home/pc/catkin_ws/src/avoidance/global_planner/include",
+                "/home/pc/catkin_ws/src/avoidance/local_planner/include",
+                "/home/pc/catkin_ws/src/avoidance/safe_landing_planner/include",
+                "/usr/include",
+                "${workspaceFolder}/libraries"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/lib/ccache/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}
