@@ -244,11 +244,11 @@ void AP_MotorsCoax::output_armed_stabilizing()
 
     if (fabsf(_actuator_out[2]) > 1.0f) {
         limit.roll_pitch = true;
-        _actuator_out[2] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
+        _actuator_out[2] = constrain_float(_actuator_out[2], -1.0f, 1.0f);
     }
     if (fabsf(_actuator_out[3]) > 1.0f) {
           limit.roll_pitch = true;
-        _actuator_out[3] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
+        _actuator_out[3] = constrain_float(_actuator_out[3], -1.0f, 1.0f);
     }
 
 }
